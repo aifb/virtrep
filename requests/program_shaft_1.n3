@@ -19,7 +19,7 @@
 { 
   ?arm <http://step.aifb.kit.edu/numberOfRequests> ?r .
 
-  ?r math:notLessThan "10" .
+  ?r math:greaterThan "10" .
   ?r math:notGreaterThan "20" .
 
   (?r "10") math:difference ?diff .
@@ -34,7 +34,6 @@
 { 
   ?arm <http://step.aifb.kit.edu/numberOfRequests> ?r .
 
-  ?r math:notLessThan  "0" .
   ?r math:notGreaterThan "10" .
   
 } => {

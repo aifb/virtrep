@@ -11,7 +11,7 @@ CONSTRUCT {
 
 
 } WHERE { 
-?s <https://w3id.org/saref#hasState> ?abrasion . 
+?s <http://step.aifb.kit.edu/hasAbrasion> ?abrasion .
 ?t <https://w3id.org/saref#accomplishes> ?job .
 }
 

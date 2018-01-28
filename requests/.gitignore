@@ -7,3 +7,14 @@
 /program_shaft_2.n3~
 /update_jaws_program.sh~
 /close_claw.sh
+/create_jaws_container.sh~
+/create_jaws_program.sh~
+/create_jaws_query.sh~
+/create_jaws_virtrepr.sh~
+/create_shaft_program.sh~
+/create_shaft_query.sh~
+/program_shaft_1.n3~
+/query_jaws.rq~
+/read_jaws_virtrepr.sh~
+/read_shaft_virtrepr.sh~
+/update_shaft_program.sh~
