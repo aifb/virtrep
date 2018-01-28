@@ -1,0 +1,17 @@
+CONSTRUCT { 
+</shaft> rdf:type> :VirtualRepresentation> . 
+</shaft> :hasProgram </shaft/program/> .
+</shaft> :hasQuery </shaft/query/> .
+</shaft> saref:hasState </shaft/abrasion/> .
+</shaft> saref:accomplishes ?job .
+
+<shaft/abrasion> rdf:value ?abrasion .
+<shaft/abrasion> rdf:type saref:State .
+} WHERE { 
+  ?s saref:hasState ?abrasion . 
+  ?t saref:accomplishes ?job .
+}
+
+
+
+

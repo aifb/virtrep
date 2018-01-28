@@ -1,0 +1,19 @@
+CONSTRUCT { 
+
+<http://km.aifb.kit.edu/services/bader4/marmotta/ldp/virtcontainer/shaft> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://people.aifb.kit.edu/mu2771/step/VirtualRepresentation> . 
+<http://km.aifb.kit.edu/services/bader4/marmotta/ldp/virtcontainer/shaft> <http://people.aifb.kit.edu/mu2771/step/hasProgram> <http://km.aifb.kit.edu/services/bader4/marmotta/ldp/virtcontainer/program/> .
+<http://km.aifb.kit.edu/services/bader4/marmotta/ldp/virtcontainer/shaft> <http://people.aifb.kit.edu/mu2771/step/hasQuery> <http://km.aifb.kit.edu/services/bader4/marmotta/ldp/virtcontainer/query/> .
+<http://km.aifb.kit.edu/services/bader4/marmotta/ldp/virtcontainer/shaft> <https://w3id.org/saref#hasState> <http://km.aifb.kit.edu/services/bader4/marmotta/ldp/virtcontainer/shaft#abrasion> .
+<http://km.aifb.kit.edu/services/bader4/marmotta/ldp/virtcontainer/shaft> <https://w3id.org/saref#accomplishes> ?job .
+
+<http://km.aifb.kit.edu/services/bader4/marmotta/ldp/virtcontainer/shaft#abrasion> <http://www.w3.org/1999/02/22-rdf-syntax-ns#value> ?abrasion .
+<http://km.aifb.kit.edu/services/bader4/marmotta/ldp/virtcontainer/shaft#abrasion> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://w3id.org/saref#State> .
+
+
+} WHERE { 
+?s <https://w3id.org/saref#hasState> ?abrasion . 
+?t <https://w3id.org/saref#accomplishes> ?job .
+}
+
+
+
