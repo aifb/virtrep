@@ -319,10 +319,10 @@ public class LdpWebService {
 				}
 			} else if ( isVirtualResource(resource, conn) ) {
 
-
 				RDFFormat format = RDFFormat.TURTLE;
 				try {
-					format = RDFFormat.forMIMEType(MarmottaHttpUtils.parseAcceptHeader(type).get(0).getMime());
+					RDFFormat format2 = RDFFormat.forMIMEType(MarmottaHttpUtils.parseAcceptHeader(type).get(0).getMime());
+					if (format2 != null) format = format2;
 				} catch (Exception e) {
 
 				}
@@ -598,7 +598,8 @@ public class LdpWebService {
 
 		RDFFormat format = RDFFormat.TURTLE;
 		try {
-			format = RDFFormat.forMIMEType(MarmottaHttpUtils.parseAcceptHeader(accept_type).get(0).getMime());
+			RDFFormat format2 = RDFFormat.forMIMEType(MarmottaHttpUtils.parseAcceptHeader(accept_type).get(0).getMime());
+			if (format2 != null) format = format2;
 		} catch (Exception e) {
 
 		}
@@ -1592,7 +1593,7 @@ public class LdpWebService {
 		URI query = null;
 		while (contains_triples.hasNext()) {
 			RepositoryResult<Statement> programs = connection.getStatements(
-					new URIImpl(contains_triples.next().getObject().stringValue()),
+					service,
 					new URIImpl(STEP.hasProgram.getLabel()), null, true, new org.openrdf.model.Resource[0]);
 
 			if (programs.hasNext()) {
@@ -1604,13 +1605,13 @@ public class LdpWebService {
 				} else {
 					program = new URIImpl(program_uri + ".bin");
 				}
-				break;
 			}
 
 
 			RepositoryResult<Statement> queries = connection.getStatements(
-					new URIImpl(contains_triples.next().getObject().stringValue()),
-					new URIImpl(STEP.hasQuery.getLabel()), null, true, new org.openrdf.model.Resource[0]);
+					service,
+					new URIImpl(STEP.hasQuery.getLabel()), 
+					null, true, new org.openrdf.model.Resource[0]);
 
 			if (queries.hasNext()) {
 				String query_uri = queries.next().getObject().stringValue();
@@ -1621,8 +1622,9 @@ public class LdpWebService {
 				} else {
 					query = new URIImpl(query_uri + ".bin");
 				}
-				break;
 			}
+			
+			contains_triples.next();
 		}
 
 		if (program == null || query == null)
@@ -2051,15 +2053,22 @@ public class LdpWebService {
 	 */
 	public boolean isVirtualResource(String uriInfo, RepositoryConnection conn) {
 
-		uriInfo = uriInfo.substring(0, uriInfo.lastIndexOf("/"));
+		//uriInfo = uriInfo.substring(0, uriInfo.lastIndexOf("/"));
 
 		try {
 
 			if (conn.hasStatement(
 					getContainer(uriInfo, conn),
 					ValueFactoryImpl.getInstance().createURI(RDF.TYPE.stringValue()),
-					ValueFactoryImpl.getInstance().createURI(STEP.VirtualResource.getLabel()),
-					true)) {
+					ValueFactoryImpl.getInstance().createURI(STEP.VirtualResourceContainer.getLabel()),
+					true) 
+					&&
+					conn.hasStatement(
+							ValueFactoryImpl.getInstance().createURI(uriInfo),
+							ValueFactoryImpl.getInstance().createURI(RDF.TYPE.stringValue()),
+							ValueFactoryImpl.getInstance().createURI(STEP.VirtualResource.getLabel()),
+							true) 
+					) {
 				return true;
 			} else {
 
@@ -2074,7 +2083,7 @@ public class LdpWebService {
 
 	public Resource getContainer(String child, RepositoryConnection conn) throws RepositoryException {
 
-		child = child.substring(0, child.lastIndexOf("/"));
+		//child = child.substring(0, child.lastIndexOf("/"));
 
 		RepositoryResult<Statement> result = conn.getStatements(null,
 				ValueFactoryImpl.getInstance().createURI(LDP.contains.stringValue()),
@@ -2085,7 +2094,7 @@ public class LdpWebService {
 			return	result.next().getSubject();
 		} else {
 
-			return null;
+			throw new RepositoryException("No such resurce.");
 
 		}
 	}
