@@ -44,7 +44,7 @@
   
 } => {
 
-  ?arm <http://step.aifb.kit.edu/hasAbrasion> ?abrasion .
+  <#shaft> <http://step.aifb.kit.edu/hasAbrasion> ?abrasion .
 } .
 
 
@@ -55,7 +55,7 @@
   
 } => {
 
-  ?arm <http://step.aifb.kit.edu/hasAbrasion> "1" .
+  <#shaft> <http://step.aifb.kit.edu/hasAbrasion> "1" .
 } .
 
 

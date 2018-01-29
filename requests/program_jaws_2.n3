@@ -28,7 +28,7 @@
   
 } => {
 
-  <#shaft> <http://step.aifb.kit.edu/hasAbrasion> "0" .
+  <#jaws> <http://step.aifb.kit.edu/hasAbrasion> "0" .
 } .
 
 
@@ -44,7 +44,7 @@
   
 } => {
 
-  ?arm <http://step.aifb.kit.edu/hasAbrasion> ?abrasion .
+  <#jaws> <http://step.aifb.kit.edu/hasAbrasion> ?abrasion .
 } .
 
 
@@ -55,7 +55,7 @@
   
 } => {
 
-  ?arm <http://step.aifb.kit.edu/hasAbrasion> "1" .
+  <#jaws> <http://step.aifb.kit.edu/hasAbrasion> "1" .
 } .
 
 
@@ -64,7 +64,7 @@
   ?x <http://step.aifb.kit.edu/hasStatistics> ?job .
   ?job math:greaterThan "1000" .
 } => {
-  <#shaft> <https://w3id.org/saref#accomplishes> ?job .
+  <#jaws> <https://w3id.org/saref#accomplishes> ?job .
 } .
 
 

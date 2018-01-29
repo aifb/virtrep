@@ -19,6 +19,17 @@
 { 
   ?arm <http://step.aifb.kit.edu/numberOfRequests> ?r .
 
+  ?r math:notGreaterThan "10" .
+  
+} => {
+
+  <#shaft> <http://step.aifb.kit.edu/hasAbrasion> "0" .
+} .
+
+
+{ 
+  ?arm <http://step.aifb.kit.edu/numberOfRequests> ?r .
+
   ?r math:greaterThan "10" .
   ?r math:notGreaterThan "20" .
 
@@ -27,18 +38,7 @@
   
 } => {
 
-  ?arm <http://step.aifb.kit.edu/hasAbrasion> ?abrasion .
-} .
-
-
-{ 
-  ?arm <http://step.aifb.kit.edu/numberOfRequests> ?r .
-
-  ?r math:notGreaterThan "10" .
-  
-} => {
-
-  <#shaft> <http://step.aifb.kit.edu/hasAbrasion> "0" .
+  <#shaft> <http://step.aifb.kit.edu/hasAbrasion> ?abrasion .
 } .
 
 
@@ -51,7 +51,7 @@
   
 } => {
 
-  ?arm <http://step.aifb.kit.edu/hasAbrasion> "1" .
+  <#shaft> <http://step.aifb.kit.edu/hasAbrasion> "1" .
 } .
 
 
