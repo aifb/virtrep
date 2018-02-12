@@ -27,7 +27,7 @@ import edu.kit.aifb.step.resources.*;
 
 import org.apache.commons.cli.MissingArgumentException;
 import org.apache.commons.lang3.StringUtils;
-
+import org.apache.http.MethodNotSupportedException;
 import org.apache.marmotta.commons.http.ContentType;
 import org.apache.marmotta.commons.http.MarmottaHttpUtils;
 import org.apache.marmotta.commons.vocabulary.LDP;
@@ -290,10 +290,8 @@ public class LdpWebService {
 		try {
 			if (isCallInstanze(resource, conn)) {
 
-				//TODO make FlsWrapper request
-
-				FlsVisitourCallInstance callInstance = new FlsVisitourCallInstance(
-						"http://localhost:8080/marmotta/ldp/FLS-1", resource.substring(resource.lastIndexOf("/")+1));
+				FlsVisitourCallInstance callInstance = new FlsVisitourCallInstance(resource,
+						resource.substring(resource.lastIndexOf("/") + 1));
 
 				if (type.contains(MediaType.TEXT_PLAIN.toLowerCase())
 						|| type.contains(MediaType.TEXT_HTML.toLowerCase())) {
@@ -309,7 +307,6 @@ public class LdpWebService {
 					return Response.status(Status.OK)
 							.entity("the fls visitour REST web service for specific calls: " + graph)
 							.variants(Utils.getVariants()).build();
-
 				} else {
 
 					conn.commit();
@@ -317,27 +314,98 @@ public class LdpWebService {
 					}).variants(Utils.getVariants()).build();
 
 				}
-			} else if ( isVirtualResource(resource, conn) ) {
+			}else if (ldpService.isVirtualResource(conn, resource)) {
 
-				RDFFormat format = RDFFormat.TURTLE;
-				try {
-					RDFFormat format2 = RDFFormat.forMIMEType(MarmottaHttpUtils.parseAcceptHeader(type).get(0).getMime());
-					if (format2 != null) format = format2;
-				} catch (Exception e) {
+				// =============================================================================================
+				//
+				// is a FLSResource
+				//
+				// TODO einfügen von getChild()
+				// =============================================================================================
+				RepositoryResult<Statement> neededPatterns = conn.getStatements(
+						ValueFactoryImpl.getInstance().createURI(ldpService.getResourceUri(uriInfo)),
+						ValueFactoryImpl.getInstance().createURI(STEP.interactionPattern.getLabel()), null, true);
 
+				while (neededPatterns.hasNext()) {
+					Statement neededClass = neededPatterns.next();
+					try {
+						Class<?> cls_Test = Class.forName(interactionPatterns
+								.get(new org.semanticweb.yars.nx.Resource(neededClass.getObject().toString())));
+						Constructor<?> co = cls_Test.getConstructor(String.class);
+						SemanticStateBasedResource res = (SemanticStateBasedResource) co.newInstance(resource);
+						
+						if (type.contains(MediaType.TEXT_PLAIN.toLowerCase())
+								|| type.contains(MediaType.TEXT_HTML.toLowerCase())) {
+							String graph = "";
+							Iterable<org.semanticweb.yars.nx.Resource> childs= res.contains();
+							Iterator<org.semanticweb.yars.nx.Resource> iterChilds = childs.iterator();
+							Iterable<Node[]> nodes = res.read();
+							Iterator<Node[]> iter = nodes.iterator();
+							while (iter.hasNext()) {
+								Node[] node = iter.next();
+								graph += node[0].getLabel() + " " + node[1].getLabel() + " " + node[2].getLabel() + "\n";
+							}
+							while (iterChilds.hasNext()) {
+								org.semanticweb.yars.nx.Resource child = iterChilds.next();
+								graph += resource + " " + org.semanticweb.yars.nx.namespace.LDP.CONTAINS + " " + child.getLabel() + "\n";
+							}
+
+							conn.commit();
+							return Response.status(Status.OK)
+									.entity("the fls visitour REST web service for specific calls: " + graph)
+									.variants(Utils.getVariants()).build();
+						} else {
+
+							conn.commit();
+							Iterable<Node[]> transitionRead = res.read();
+							Iterator<Node[]> iterRead = transitionRead.iterator();
+							Iterable<org.semanticweb.yars.nx.Resource> childs= res.contains();
+							Iterator<org.semanticweb.yars.nx.Resource> iterChilds = childs.iterator();
+							
+							List<Node[]> transitionGraph = new ArrayList<Node[]>();
+							
+							while(iterRead.hasNext()) {
+								transitionGraph.add(iterRead.next());
+							}
+							
+							while(iterChilds.hasNext()) {
+								Node base = new org.semanticweb.yars.nx.Resource( resource );
+								Node contains = new org.semanticweb.yars.nx.Resource( LDP.contains.toString() );
+								transitionGraph.add(new Node[] {base, contains, iterChilds.next()});
+							}
+							Iterable<Node[]> graph = transitionGraph;
+
+							return Response.ok().entity(new GenericEntity<Iterable<Node[]>>(graph) {
+							}).variants(Utils.getVariants()).build();
+
+						}
+					} catch (ClassNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (InstantiationException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (NoSuchMethodException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IllegalAccessException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IllegalArgumentException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (InvocationTargetException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
-				Resource service = getContainer(resource, conn);
-				return executeLinkedDataWebService(conn, service, Response.ok(), null, format).build();
-
-			}	
+			}
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			throw new RepositoryException(e);
 		} finally {
 			conn.close();
 		}
-
 
 		log.debug("GET to LDPR <{}>", resource);
 		return buildGetResponse(resource, MarmottaHttpUtils.parseAcceptHeader(type), preferHeader).build();
@@ -824,7 +892,20 @@ public class LdpWebService {
 			final String mimeType = LdpUtils.getMimeType(type);
 			final Response.ResponseBuilder resp;
 			final String newResource; // NOTE: newResource == resource for now, this might change in the future
-			if (ldpService.exists(conn, resource)) {
+
+			if (isCallInstanze(resource, conn)) {
+
+				FlsVisitourCallInstance callInstance = new FlsVisitourCallInstance(resource,
+						resource.substring(resource.lastIndexOf("/") + 1));
+
+				callInstance.update(postBodyToIterableNode(postBody, new URIImpl(resource)));
+
+				log.debug("PUT update for <{}> successful", resource);
+				resp = createResponse(conn, Response.Status.OK, resource);
+				conn.commit();
+				return resp.build();
+
+			} else if (ldpService.exists(conn, resource)) {
 
 				log.debug("<{}> exists and is a DataResource, so this is an UPDATE", resource);
 
@@ -924,8 +1005,24 @@ public class LdpWebService {
 		final RepositoryConnection con = sesameService.getConnection();
 		try {
 			con.begin();
-
-			if (!ldpService.exists(con, resource)) {
+			if (isCallInstanze(resource, con)) {
+				FlsVisitourCallInstance callInstance = new FlsVisitourCallInstance(resource,
+						resource.substring(resource.lastIndexOf("/") + 1));
+				
+				try {
+					callInstance.delete();
+				} catch (RemoteException e) {
+					log.error("Error deleting LDP-R: {}: {}", resource, e.getMessage());
+					con.rollback();
+					throw e;
+				} catch (MethodNotSupportedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				con.commit();
+				return Response.status(Status.OK).build();
+			} else if (!ldpService.exists(con, resource)) {
 				final Response.ResponseBuilder resp;
 				if (ldpService.isReusedURI(con, resource)) {
 					resp = createResponse(con, Response.Status.GONE, resource);
@@ -935,7 +1032,6 @@ public class LdpWebService {
 				con.rollback();
 				return resp.build();
 			}
-
 			ldpService.deleteResource(con, resource);
 			final Response.ResponseBuilder resp = createResponse(con, Response.Status.NO_CONTENT, resource);
 			con.commit();
@@ -943,8 +1039,13 @@ public class LdpWebService {
 		} catch (final Throwable e) {
 			log.error("Error deleting LDP-R: {}: {}", resource, e.getMessage());
 			con.rollback();
-			throw e;
-		} finally {
+			try {
+				throw e;
+			} catch (Throwable e1) {
+				// TODO Auto-generated catch block
+				return Response.status(Status.CONFLICT).entity(e1).build();
+			}
+		}finally {
 			con.close();
 		}
 
