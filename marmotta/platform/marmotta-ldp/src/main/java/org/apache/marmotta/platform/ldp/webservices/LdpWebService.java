@@ -1623,7 +1623,7 @@ public class LdpWebService {
 					query = new URIImpl(query_uri + ".bin");
 				}
 			}
-			
+
 			contains_triples.next();
 		}
 
@@ -2028,8 +2028,16 @@ public class LdpWebService {
 	}
 
 
-
+	/**
+	 * @author marcel
+	 * 
+	 * @param uriInfo
+	 * @param conn
+	 * @return
+	 */
 	public boolean isCallInstanze(String uriInfo, RepositoryConnection conn) {
+
+		//TODO make more agile for other InteractionPatterns
 
 		uriInfo = uriInfo.substring(0, uriInfo.lastIndexOf("/"));
 
