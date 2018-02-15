@@ -372,8 +372,8 @@
 			<artifactId>nxparser-jax-rs</artifactId>
 			<version>${nxparser.version}</version>
 		</dependency>
-
-		<!-- Linked Data-Fu from local Maven Repo -->
+		
+		    <!-- Linked Data-Fu from local Maven Repo -->
 		<dependency>
 			<groupId>edu.kit.aifb.linkeddatafu</groupId>
 			<artifactId>linked-data-fu-common</artifactId>
@@ -428,6 +428,12 @@
 			<groupId>edu.kit.aifb.step</groupId>
 			<artifactId>flswrapper-soap</artifactId>
 			<version>0.0.2-SNAPSHOT</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>edu.kit.aifb.step</groupId>
+			<artifactId>linkeddatawebservice</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>

@@ -17,11 +17,13 @@
  */
 package org.apache.marmotta.platform.ldp.webservices;
 
+import edu.kit.aifb.step.linkeddatawebservice.*;
 import org.eclipse.recommenders.jayes.BayesNet;
 import org.eclipse.recommenders.jayes.BayesNode;
 import org.eclipse.recommenders.jayes.inference.IBayesInferrer;
 import org.eclipse.recommenders.jayes.inference.jtree.JunctionTreeAlgorithm;
 
+import edu.kit.aifb.step.api.AbstractSemanticStateBasedResource;
 import edu.kit.aifb.step.api.SemanticStateBasedResource;
 import edu.kit.aifb.step.resources.*;
 
@@ -90,20 +92,6 @@ import com.google.common.util.concurrent.Service.State;
 
 //import com.jayway.restassured.builder.ResponseBuilder;
 
-import edu.kit.aifb.datafu.Binding;
-import edu.kit.aifb.datafu.ConstructQuery;
-import edu.kit.aifb.datafu.Origin;
-import edu.kit.aifb.datafu.Program;
-import edu.kit.aifb.datafu.consumer.impl.BindingConsumerCollection;
-import edu.kit.aifb.datafu.engine.EvaluateProgram;
-import edu.kit.aifb.datafu.io.origins.InternalOrigin;
-import edu.kit.aifb.datafu.io.sinks.BindingConsumerSink;
-import edu.kit.aifb.datafu.parser.ProgramConsumerImpl;
-import edu.kit.aifb.datafu.parser.QueryConsumerImpl;
-import edu.kit.aifb.datafu.parser.notation3.Notation3Parser;
-import edu.kit.aifb.datafu.parser.sparql.SparqlParser;
-import edu.kit.aifb.datafu.planning.EvaluateProgramConfig;
-import edu.kit.aifb.datafu.planning.EvaluateProgramGenerator;
 import edu.kit.aifb.step.vocabs.DBO;
 import edu.kit.aifb.step.vocabs.HYDRA;
 import edu.kit.aifb.step.vocabs.MEXCORE;
@@ -256,6 +244,7 @@ public class LdpWebService {
 		// Marcel
 		interactionPatterns.put(STEP.BayesNode, "BayesNode");
 		interactionPatterns.put(STEP.FLSVisitourAPI, "edu.kit.aifb.step.resources.FlsVisitourCallContainer");
+		interactionPatterns.put(STEP.StartAPI, "edu.kit.aifb.step.linkeddatawebservice.LinkedDataWebService");
 
 	}
 
@@ -332,8 +321,8 @@ public class LdpWebService {
 					try {
 						Class<?> cls_Test = Class.forName(interactionPatterns
 								.get(new org.semanticweb.yars.nx.Resource(neededClass.getObject().toString())));
-						Constructor<?> co = cls_Test.getConstructor(String.class);
-						SemanticStateBasedResource res = (SemanticStateBasedResource) co.newInstance(resource);
+						Constructor<?> co = cls_Test.getConstructor(String.class, RepositoryConnection.class, LdpBinaryStoreService.class);
+						AbstractSemanticStateBasedResource res = (AbstractSemanticStateBasedResource) co.newInstance(resource, conn, binaryStore);
 
 						if (type.contains(MediaType.TEXT_PLAIN.toLowerCase())
 								|| type.contains(MediaType.TEXT_HTML.toLowerCase())) {
@@ -732,15 +721,17 @@ public class LdpWebService {
 					try {
 
 						final String resource = ldpService.getResourceUri(uriInfo);
-						final Response.ResponseBuilder response = createResponse(conn, Response.Status.CREATED,
+						Response.ResponseBuilder response = createResponse(conn, Response.Status.CREATED,
 								resource);
 						Class cls_Test = Class.forName(interactionPatterns
 								.get(new org.semanticweb.yars.nx.Resource(neededClass.getObject().toString())));
 						Constructor co = cls_Test.getConstructor(String.class);
 						SemanticStateBasedResource res = (SemanticStateBasedResource) co.newInstance(resource);
-						res.create(postBodyToIterableNode(postBody, new URIImpl(resource)));
+						if(res.create(postBodyToIterableNode(postBody, new URIImpl(resource))) == null)
+							response = createResponse(conn, Response.Status.METHOD_NOT_ALLOWED, resource);
 
 						conn.commit();
+						
 						return response.build();
 
 					} catch (ClassNotFoundException e) {
@@ -1395,22 +1386,22 @@ public class LdpWebService {
 					return executeBayesschesModel(service, rb, connection, postBody, models, format);
 				}
 
-				else  {
+				//else  {
 
-					RepositoryResult<Statement> contains_triples = connection.getStatements(service, LDP.contains, null, false);
-					if (!contains_triples.hasNext()) {
-						log.warn("Could not find any connected service to <{}>", resource);
-						return rb.status(Response.Status.EXPECTATION_FAILED)
-								.entity("Could not find any connected program!");
-					}
+				//	RepositoryResult<Statement> contains_triples = connection.getStatements(service, LDP.contains, null, false);
+				//	if (!contains_triples.hasNext()) {
+				//		log.warn("Could not find any connected service to <{}>", resource);
+				//		return rb.status(Response.Status.EXPECTATION_FAILED)
+				//				.entity("Could not find any connected program!");
+				//	}
 					// =============================================================================================
 					//
 					// is a LinkedDataWebService
 					//
 					// =============================================================================================
 
-					return executeLinkedDataWebService(connection, service, rb, postBody, format);
-				}
+				//	return executeLinkedDataWebService(connection, service, rb, postBody, format);
+				//}
 
 			} catch (RepositoryException e) {
 				return rb.status(Response.Status.EXPECTATION_FAILED)
@@ -1424,6 +1415,13 @@ public class LdpWebService {
 			}
 
 		}
+
+		return rb;
+	}
+	
+	protected Response.ResponseBuilder createWebServiceResponse(Response.ResponseBuilder rb) {
+		// Link rel='http://www.w3.org/ns/ldp#constrainedBy' (Sec. 4.2.1.6)
+		rb.link(LDP_SERVER_CONSTRAINTS, LINK_REL_CONSTRAINEDBY);
 
 		return rb;
 	}

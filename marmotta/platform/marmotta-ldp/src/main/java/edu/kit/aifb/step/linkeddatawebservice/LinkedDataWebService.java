@@ -11,6 +11,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
+import javax.inject.Inject;
+import javax.swing.AbstractSpinnerModel;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
@@ -20,8 +22,10 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.commons.cli.MissingArgumentException;
 import org.apache.http.MethodNotSupportedException;
 import org.apache.marmotta.commons.vocabulary.LDP;
-import org.apache.marmotta.ldpath.parser.ParseException;
-import org.jboss.resteasy.spi.NoLogWebApplicationException;
+import org.apache.marmotta.platform.ldp.api.LdpBinaryStoreService;
+//import org.apache.marmotta.commons.vocabulary.LDP;
+//import org.apache.marmotta.ldpath.parser.ParseException;
+//import org.jboss.resteasy.spi.NoLogWebApplicationException;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
@@ -57,11 +61,18 @@ import edu.kit.aifb.datafu.parser.notation3.Notation3Parser;
 import edu.kit.aifb.datafu.parser.sparql.SparqlParser;
 import edu.kit.aifb.datafu.planning.EvaluateProgramConfig;
 import edu.kit.aifb.datafu.planning.EvaluateProgramGenerator;
+import edu.kit.aifb.step.api.AbstractSemanticStateBasedResource;
 import edu.kit.aifb.step.api.SemanticStateBasedResource;
 import edu.kit.aifb.step.vocabs.STEP;
 
-public class LinkedDataWebService implements SemanticStateBasedResource {
 
+
+public class LinkedDataWebService extends AbstractSemanticStateBasedResource implements SemanticStateBasedResource {
+	
+	public LinkedDataWebService(String baseUri, RepositoryConnection connection, LdpBinaryStoreService store) {
+		super(baseUri, connection, store);
+	}
+	
 	public List<Resource> contains() throws RemoteException {
 		// TODO Auto-generated method stub
 		return null;
@@ -78,42 +89,12 @@ public class LinkedDataWebService implements SemanticStateBasedResource {
 	}
 
 	public Iterable<Node[]> read() throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Iterable<Node[]> readDescription() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public SemanticStateBasedResource retrieve(String arg0) throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public boolean update(Iterable<Node[]> arg0) throws RemoteException {
-		// TODO Auto-generated method stub
-		return false;
-	}
-	
-	
-
-	/**
-	 * @author sba
-	 * 
-	 * @param service
-	 * @param rb
-	 * @param postBody
-	 * @param format
-	 * @return
-	 * @throws RepositoryException 
-	 */
-	private ResponseBuilder executeLinkedDataWebService(RepositoryConnection connection, Resource service, ResponseBuilder rb, InputStream postBody,
-			RDFFormat format) throws RepositoryException {
-
+		org.openrdf.model.Resource service;
+		try {
+			service = getContainer(baseUri, connection);
+		
 		RepositoryResult<Statement> contains_triples = connection.getStatements(service, LDP.contains, null, false);
-
+		
 
 		URI program = null;
 		URI query = null;
@@ -171,9 +152,37 @@ public class LinkedDataWebService implements SemanticStateBasedResource {
 		// executeWebService(service, postBody, "",
 		// programs.next().getObject().stringValue()) ) { }
 		// );
-		return executeLinkedDataWebService(service, rb, postBody, "", program.stringValue(), query.stringValue(), format);
-
+		
+			return executeLinkedDataWebService(program.stringValue(), query.stringValue());
+		} catch (RepositoryException e) {
+			List<Node[]> error = new ArrayList<Node[]>();
+			e.printStackTrace();
+			//log.error("sparql.ParseException: ", e);
+			error.add(new Node[] { new BNode("error"), RDFS.LABEL, new Literal("failed!") });
+			error.add(new Node[] { new BNode("error"), RDFS.COMMENT,
+					new Literal("sparql.ParseException: " + e.getMessage()) });
+			return error;
+		}
+ 
 	}
+
+	public Iterable<Node[]> readDescription() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public SemanticStateBasedResource retrieve(String arg0) throws RemoteException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public boolean update(Iterable<Node[]> arg0) throws RemoteException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	
+	
+
 
 
 
@@ -192,8 +201,7 @@ public class LinkedDataWebService implements SemanticStateBasedResource {
 	 * @return
 	 * @throws IllegalArgumentException
 	 */
-	private ResponseBuilder executeLinkedDataWebService(Resource resource, ResponseBuilder rb, InputStream postBody,
-			String query, String program_resource, String query_resource, RDFFormat format) throws IllegalArgumentException {
+	private Iterable<Node[]> executeLinkedDataWebService(String program_resource, String query_resource) throws IllegalArgumentException {
 
 		ValueFactory factory = ValueFactoryImpl.getInstance();
 		List<Node[]> results = new ArrayList<Node[]>();
@@ -203,7 +211,7 @@ public class LinkedDataWebService implements SemanticStateBasedResource {
 		 */
 
 		try {
-
+			LdpBinaryStoreService binaryStore = (LdpBinaryStoreService) store;
 			// OutputStream program_data = new ByteArrayOutputStream();
 			InputStream program_data = binaryStore.read(new URIImpl(program_resource));
 			InputStream query_data = binaryStore.read(new URIImpl(query_resource));
@@ -229,26 +237,13 @@ public class LinkedDataWebService implements SemanticStateBasedResource {
 			StatementCollector collector = new StatementCollector(myGraph);
 			rdfParser.setRDFHandler(collector);
 
-			try {
-				if (postBody != null)
-					rdfParser.parse(postBody, resource.stringValue());
-			} catch (RDFParseException | RDFHandlerException e) {
-
-				List<Node[]> error = new LinkedList<Node[]>();
-				error.add(new org.semanticweb.yars.nx.Node[] { new org.semanticweb.yars.nx.BNode("You"), RDFS.LABEL,
-						new org.semanticweb.yars.nx.Literal("failed!") });
-			} catch (IOException e) {
-				log.error("Parsing incoming data failed: ", e);
-				e.printStackTrace();
-			}
-
 			List<org.semanticweb.yars.nx.Node[]> input_nodes = new LinkedList<org.semanticweb.yars.nx.Node[]>();
 
 			myGraph.forEach(s -> {
 				org.semanticweb.yars.nx.Node[] node = { new org.semanticweb.yars.nx.Resource(s.getSubject().toString()),
 						new org.semanticweb.yars.nx.Resource(s.getSubject().toString()),
 						new org.semanticweb.yars.nx.Resource(s.getSubject().toString()) };
-				log.warn("Input Nodes: " + node[0] + " " + node[1] + " " + node[2]);
+				//log.warn("Input Nodes: " + node[0] + " " + node[1] + " " + node[2]);
 				input_nodes.add(node);
 			});
 
@@ -327,81 +322,49 @@ public class LinkedDataWebService implements SemanticStateBasedResource {
 
 		} catch (edu.kit.aifb.datafu.parser.sparql.ParseException e) {
 			e.printStackTrace();
-			log.error("sparql.ParseException: ", e);
+			//log.error("sparql.ParseException: ", e);
 			results.add(new Node[] { new BNode("error"), RDFS.LABEL, new Literal("failed!") });
 			results.add(new Node[] { new BNode("error"), RDFS.COMMENT,
 					new Literal("sparql.ParseException: " + e.getMessage()) });
 		} catch (edu.kit.aifb.datafu.parser.notation3.ParseException e) {
 			e.printStackTrace();
-			log.error("notation3.ParseException: ", e);
+			//log.error("notation3.ParseException: ", e);
 			results.add(new Node[] { new BNode("error"), RDFS.LABEL, new Literal("failed!") });
 			results.add(new Node[] { new BNode("error"), RDFS.COMMENT,
 					new Literal("notation3.ParseException: " + e.getMessage()) });
 		} catch (InterruptedException e) {
 			e.printStackTrace();
-			log.error("InterruptedException: ", e);
+			//log.error("InterruptedException: ", e);
 			results.add(new Node[] { new BNode("error"), RDFS.LABEL, new Literal("failed!") });
 			results.add(new Node[] { new BNode("error"), RDFS.COMMENT,
 					new Literal("InterruptedException: " + e.getMessage()) });
 		} catch (IOException e) {
 			e.printStackTrace();
-			log.error("IOException: ", e);
+			//log.error("IOException: ", e);
 			results.add(new Node[] { new BNode("error"), RDFS.LABEL, new Literal("failed!") });
 			results.add(new Node[] { new BNode("error"), RDFS.COMMENT, new Literal("IOException: " + e.getMessage()) });
 		}
 
-		final StreamingOutput entity = new StreamingOutput() {
-
-			@Override
-			public void write(OutputStream output) throws IOException, WebApplicationException {
-				try {
-					ldpService.writeResource(resource, results, output, format);
-				} catch (RDFHandlerException e) {
-					throw new NoLogWebApplicationException(e,
-							createResponse(Response.status(Response.Status.INTERNAL_SERVER_ERROR))
-							.entity(e.getMessage()).build());
-				} catch (final Throwable t) {
-					throw t;
-				}
-			}
-		};
-
-		numberOfIntegrationRequests++;
-		return Response.status(Status.OK).entity(entity);
+		return results;
 
 	}
+	
+	public org.openrdf.model.Resource getContainer(String child, RepositoryConnection conn) throws RepositoryException {
 
-	protected Response.ResponseBuilder createWebServiceResponse(Response.ResponseBuilder rb) {
-		// Link rel='http://www.w3.org/ns/ldp#constrainedBy' (Sec. 4.2.1.6)
-		rb.link(LDP_SERVER_CONSTRAINTS, LINK_REL_CONSTRAINEDBY);
+		//child = child.substring(0, child.lastIndexOf("/"));
 
-		return rb;
-	}
+		RepositoryResult<Statement> result = conn.getStatements(null,
+				ValueFactoryImpl.getInstance().createURI(LDP.contains.stringValue()),
+				ValueFactoryImpl.getInstance().createURI(child)
+				, true);
 
-	public String getStringFromInputStream(InputStream stream) {
-		String pro = "";
-		Scanner scanner = new Scanner(stream, "UTF-8");
-		while (scanner.hasNextLine()) {
-			pro += scanner.nextLine() + "\n";
+		if (result.hasNext()) {
+			return	result.next().getSubject();
+		} else {
+
+			throw new RepositoryException("No such resurce.");
+
 		}
-		scanner.close();
-		return pro;
-	}
-
-	/**
-	 * @author sba
-	 * 
-	 * @return
-	 * @throws ParseException
-	 * @throws edu.kit.aifb.datafu.parser.notation3.ParseException
-	 */
-	public Program getProgramTriple()
-			throws ParseException, edu.kit.aifb.datafu.parser.notation3.ParseException {
-		Origin origin = new InternalOrigin("programOriginTriple");
-		ProgramConsumerImpl programConsumer = new ProgramConsumerImpl(origin);
-		Notation3Parser notation3Parser = new Notation3Parser(new ByteArrayInputStream(PROGRAM_TRIPLE.getBytes()));
-		notation3Parser.parse(programConsumer, origin);
-		return programConsumer.getProgram(origin);
 	}
 
 }
