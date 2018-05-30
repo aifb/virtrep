@@ -20,7 +20,7 @@
 		<relativePath>../../parent</relativePath>
 	</parent>
 
-	<artifactId>marmotta-ldp</artifactId>
+	<artifactId>vr-marmotta-ldp</artifactId>
 	<packaging>jar</packaging>
 
 	<name>Apache Marmotta Platform: LDP</name>
@@ -157,6 +157,8 @@
 	</build>
 
 	<properties>
+		<!-- <marmotta.version>3.3.0</marmotta.version> -->
+
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jayes.version>2.4.10-SNAPSHOT</jayes.version>
 
@@ -234,6 +236,7 @@
 		<dependency>
 			<groupId>org.apache.marmotta</groupId>
 			<artifactId>marmotta-util-rdfpatch</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.marmotta</groupId>
@@ -378,43 +381,43 @@
 			<groupId>edu.kit.aifb.linkeddatafu</groupId>
 			<artifactId>linked-data-fu-common</artifactId>
 			<version>0.9.10</version>
-			<!-- <scope>system</scope> <systemPath>${project.basedir}/libs/linked-data-fu-common-0.9.10.jar</systemPath> -->
+			<scope>system</scope> <systemPath>${project.basedir}/libs/linked-data-fu-common-0.9.10.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>edu.kit.aifb.linkeddatafu</groupId>
 			<artifactId>linked-data-fu-datasets</artifactId>
 			<version>0.9.10</version>
-			<!-- <scope>system</scope> <systemPath>${project.basedir}/libs/linked-data-fu-datasets-0.9.10.jar</systemPath> -->
+			<scope>system</scope> <systemPath>${project.basedir}/libs/linked-data-fu-datasets-0.9.10.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>edu.kit.aifb.linkeddatafu</groupId>
 			<artifactId>linked-data-fu-engine</artifactId>
 			<version>0.9.10</version>
-			<!-- <scope>system</scope> <systemPath>${project.basedir}/libs/linked-data-fu-engine-0.9.10.jar</systemPath> -->
+			<scope>system</scope> <systemPath>${project.basedir}/libs/linked-data-fu-engine-0.9.10.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>edu.kit.aifb.linkeddatafu</groupId>
 			<artifactId>linked-data-fu-evaluators</artifactId>
 			<version>0.9.10</version>
-			<!-- <scope>system</scope> <systemPath>${project.basedir}/libs/linked-data-fu-evaluators-0.9.10.jar</systemPath> -->
+			<scope>system</scope> <systemPath>${project.basedir}/libs/linked-data-fu-evaluators-0.9.10.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>edu.kit.aifb.linkeddatafu</groupId>
 			<artifactId>linked-data-fu-io</artifactId>
 			<version>0.9.10</version>
-			<!-- <scope>system</scope> <systemPath>${project.basedir}/libs/linked-data-fu-io-0.9.10.jar</systemPath> -->
+			<scope>system</scope> <systemPath>${project.basedir}/libs/linked-data-fu-io-0.9.10.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>edu.kit.aifb.linkeddatafu</groupId>
 			<artifactId>linked-data-fu-operators</artifactId>
 			<version>0.9.10</version>
-			<!-- <scope>system</scope> <systemPath>${project.basedir}/libs/linked-data-fu-operators-0.9.10.jar</systemPath> -->
+			<scope>system</scope> <systemPath>${project.basedir}/libs/linked-data-fu-operators-0.9.10.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>edu.kit.aifb.linkeddatafu</groupId>
 			<artifactId>linked-data-fu-standalone</artifactId>
 			<version>0.9.10</version>
-			<!-- <scope>system</scope> <systemPath>${project.basedir}/libs/linked-data-fu-standalone-0.9.10.jar</systemPath> -->
+			<scope>system</scope> <systemPath>${project.basedir}/libs/linked-data-fu-standalone-0.9.10.jar</systemPath>
 		</dependency>
 
 
@@ -428,6 +431,7 @@
 			<groupId>edu.kit.aifb.step</groupId>
 			<artifactId>flswrapper-soap</artifactId>
 			<version>0.0.2-SNAPSHOT</version>
+			<scope>system</scope> <systemPath>${project.basedir}/libs/flswrapper-soap-0.0.2-SNAPSHOT-jar-with-dependencies.jar</systemPath>
 		</dependency>
 
 		<dependency>
